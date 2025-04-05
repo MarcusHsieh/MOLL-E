@@ -1,9 +1,10 @@
 import time
 import board
+import busio
 from adafruit_pca9685 import PCA9685
 
-i2c = board.I2C()
-pca = PCA9685(i2c)
+i2c = busio.I2C(board.SCL, board.SDA)
+pca = PCA9685(i2c, address=0x40)
 pca.frequency = 50
 
 def speed_to_pwm(speed):
