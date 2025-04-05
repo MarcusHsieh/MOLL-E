@@ -110,15 +110,19 @@ class MotorControllerNode(Node):
             10)
         self.get_logger().info("Subscribed to /cmd_vel_filtered.")
 
+        # Parameter to adjust the turning effect
+        self.declare_parameter('turn_scale', 1.0)
+        self.turn_scale = self.get_parameter('turn_scale').value
+
     def cmd_callback(self, msg):
-        # Here we assume a simple tank drive:
-        # For example, we can combine linear and angular components.
-        # You may adjust the mixing based on your robot's kinematics.
-        left_speed  = msg.linear.x + msg.angular.z
-        right_speed = msg.linear.x - msg.angular.z
+        # Tank-drive mixing:
+        # linear.x for forward/backward motion
+        # add/subtract an angular.z scaled by 'turn_scale' for rotation
+        left_speed  = msg.linear.x + (self.turn_scale * msg.angular.z)
+        right_speed = msg.linear.x - (self.turn_scale * msg.angular.z)
         set_left_speed(left_speed)
         set_right_speed(right_speed)
-        self.get_logger().info(f"Set left speed: {left_speed:.2f}, right speed: {right_speed:.2f}")
+        self.get_logger().info(f"Tank drive: left speed = {left_speed:.2f}, right speed = {right_speed:.2f}")
 
 def main(args=None):
     rclpy.init(args=args)
@@ -127,6 +131,7 @@ def main(args=None):
         rclpy.spin(node)
     except KeyboardInterrupt:
         node.get_logger().info("Shutting down motor controller node...")
+    # On shutdown: set both sides to neutral
     set_left_speed(0.0)
     set_right_speed(0.0)
     node.destroy_node()
