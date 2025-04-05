@@ -87,7 +87,7 @@ def speed_to_pwm(speed):
     pwm_count = max(min(pwm_count, count_max), count_min)
     return pwm_count
 
-# Initialize the PCA9685
+# Initialize PCA9685
 reset()
 set_pwm_freq(50)  # Set frequency to 50Hz (20ms period)
 
