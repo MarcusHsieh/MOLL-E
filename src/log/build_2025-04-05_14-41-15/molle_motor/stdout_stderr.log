@@ -1,0 +1,22 @@
+/home/mj/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:270: UserWarning: Unknown distribution option: 'tests_require'
+  warnings.warn(msg)
+running develop
+running egg_info
+creating molle_motor.egg-info
+writing molle_motor.egg-info/PKG-INFO
+writing dependency_links to molle_motor.egg-info/dependency_links.txt
+writing entry points to molle_motor.egg-info/entry_points.txt
+writing requirements to molle_motor.egg-info/requires.txt
+writing top-level names to molle_motor.egg-info/top_level.txt
+writing manifest file 'molle_motor.egg-info/SOURCES.txt'
+reading manifest file 'molle_motor.egg-info/SOURCES.txt'
+writing manifest file 'molle_motor.egg-info/SOURCES.txt'
+running build_ext
+Creating /home/mj/_Projects/MOLL-E/src/install/molle_motor/lib/python3.10/site-packages/molle-motor.egg-link (link to .)
+Installing motor_controller_node script to /home/mj/_Projects/MOLL-E/src/install/molle_motor/lib/molle_motor
+
+Installed /home/mj/_Projects/MOLL-E/src/build/molle_motor
+running symlink_data
+creating /home/mj/_Projects/MOLL-E/src/install/molle_motor/share/ament_index/resource_index/packages
+symbolically linking /home/mj/_Projects/MOLL-E/src/build/molle_motor/resource/molle_motor -> /home/mj/_Projects/MOLL-E/src/install/molle_motor/share/ament_index/resource_index/packages
+symbolically linking /home/mj/_Projects/MOLL-E/src/build/molle_motor/package.xml -> /home/mj/_Projects/MOLL-E/src/install/molle_motor/share/molle_motor

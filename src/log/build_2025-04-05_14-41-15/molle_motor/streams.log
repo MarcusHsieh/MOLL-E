@@ -1,0 +1,24 @@
+[0.502s] Invoking command in '/home/mj/_Projects/MOLL-E/src/build/molle_motor': CONDA_PROMPT_MODIFIER=(ros2_humble) PYTHONPATH=/home/mj/_Projects/MOLL-E/src/build/molle_motor/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mj/_Projects/MOLL-E/src/install/molle_motor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mj/_Projects/MOLL-E/src/build/molle_motor/build --no-deps symlink_data
+[0.597s] /home/mj/.local/lib/python3.10/site-packages/setuptools/_distutils/dist.py:270: UserWarning: Unknown distribution option: 'tests_require'
+[0.598s]   warnings.warn(msg)
+[0.717s] running develop
+[0.824s] running egg_info
+[0.841s] creating molle_motor.egg-info
+[0.841s] writing molle_motor.egg-info/PKG-INFO
+[0.842s] writing dependency_links to molle_motor.egg-info/dependency_links.txt
+[0.842s] writing entry points to molle_motor.egg-info/entry_points.txt
+[0.842s] writing requirements to molle_motor.egg-info/requires.txt
+[0.842s] writing top-level names to molle_motor.egg-info/top_level.txt
+[0.842s] writing manifest file 'molle_motor.egg-info/SOURCES.txt'
+[0.868s] reading manifest file 'molle_motor.egg-info/SOURCES.txt'
+[0.869s] writing manifest file 'molle_motor.egg-info/SOURCES.txt'
+[0.878s] running build_ext
+[0.878s] Creating /home/mj/_Projects/MOLL-E/src/install/molle_motor/lib/python3.10/site-packages/molle-motor.egg-link (link to .)
+[0.879s] Installing motor_controller_node script to /home/mj/_Projects/MOLL-E/src/install/molle_motor/lib/molle_motor
+[0.879s] 
+[0.879s] Installed /home/mj/_Projects/MOLL-E/src/build/molle_motor
+[0.879s] running symlink_data
+[0.879s] creating /home/mj/_Projects/MOLL-E/src/install/molle_motor/share/ament_index/resource_index/packages
+[0.879s] symbolically linking /home/mj/_Projects/MOLL-E/src/build/molle_motor/resource/molle_motor -> /home/mj/_Projects/MOLL-E/src/install/molle_motor/share/ament_index/resource_index/packages
+[0.880s] symbolically linking /home/mj/_Projects/MOLL-E/src/build/molle_motor/package.xml -> /home/mj/_Projects/MOLL-E/src/install/molle_motor/share/molle_motor
+[0.905s] Invoked command in '/home/mj/_Projects/MOLL-E/src/build/molle_motor' returned '0': CONDA_PROMPT_MODIFIER=(ros2_humble) PYTHONPATH=/home/mj/_Projects/MOLL-E/src/build/molle_motor/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/mj/_Projects/MOLL-E/src/install/molle_motor/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/mj/_Projects/MOLL-E/src/build/molle_motor/build --no-deps symlink_data

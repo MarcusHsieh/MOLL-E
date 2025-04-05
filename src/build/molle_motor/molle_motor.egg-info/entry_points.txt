@@ -1,0 +1,2 @@
+[console_scripts]
+motor_controller_node = moll_e_motor.motor_controller_node:main

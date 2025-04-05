@@ -1,0 +1,13 @@
+package.xml
+setup.cfg
+setup.py
+molle_motor/__init__.py
+molle_motor/motor_controller_node.py
+molle_motor.egg-info/PKG-INFO
+molle_motor.egg-info/SOURCES.txt
+molle_motor.egg-info/dependency_links.txt
+molle_motor.egg-info/entry_points.txt
+molle_motor.egg-info/requires.txt
+molle_motor.egg-info/top_level.txt
+molle_motor.egg-info/zip-safe
+resource/molle_motor
