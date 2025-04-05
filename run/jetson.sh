@@ -30,11 +30,16 @@ fi
 echo "--- Pre-run checks passed ---"
 
 echo "--- Launching Docker Container ---"
-# Run docker container
 docker run -it --rm \
     --runtime nvidia \
     --net=host \
+    --ipc=host \
+    --privileged \
     -v "${HOST_MOLLE_PATH}:${CONTAINER_MOLLE_PATH}" \
+    -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    -v /dev/i2c-1:/dev/i2c-1 \
+    -v /dev/ttyACM0:/dev/ttyACM0 \
+    -e DISPLAY=${DISPLAY} \
     -e ROS_DOMAIN_ID=${ROS_DOMAIN_ID_TO_USE} \
     ${DOCKER_IMAGE}
 
