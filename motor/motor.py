@@ -7,24 +7,23 @@ i2c = busio.I2C(board.SCL, board.SDA)
 pca = PCA9685(i2c)
 pca.frequency = 50
 
-# Convert a speed command (-1.0 to 1.0) to the corresponding PWM count.
 def speed_to_pwm(speed):
     """
     Convert a speed (-1.0 to 1.0) into a PCA9685 duty_cycle count.
     
-    - For speed = -1.0: pulse width should be ~1.0 ms.
-    - For speed = 0.0: pulse width ~1.5 ms (neutral).
-    - For speed = 1.0: pulse width ~2.0 ms.
+    - For speed = -1.0: pulse width ~1.0 ms (full reverse)
+    - For speed = 0.0: pulse width ~1.5 ms (neutral)
+    - For speed = 1.0: pulse width ~2.0 ms (full forward)
     """
-    # Calculate counts per ms. Total period is 20ms and resolution is 4096.
+    # Total period is 20ms and resolution is 4096 counts
     counts_per_ms = 4096 / 20.0  # ~204.8 counts per ms
 
     # Define pulse widths in ms
-    pulse_min = 1.0    # ms (full reverse)
+    pulse_min = 1.0      # ms (full reverse)
     pulse_neutral = 1.5  # ms (neutral)
-    pulse_max = 2.0    # ms (full forward)
+    pulse_max = 2.0      # ms (full forward)
 
-    # Calculate corresponding counts for min, neutral, and max
+    # Calculate corresponding counts
     count_min = int(pulse_min * counts_per_ms)
     count_neutral = int(pulse_neutral * counts_per_ms)
     count_max = int(pulse_max * counts_per_ms)
@@ -35,19 +34,18 @@ def speed_to_pwm(speed):
     else:
         # Map speed from [0, 1.0] to [count_neutral, count_max]
         pwm_count = count_neutral + int((count_max - count_neutral) * speed)
-    
+
+    # Range
     pwm_count = max(min(pwm_count, count_max), count_min)
     return pwm_count
 
-# CONTROL THIS MOTOR
-# Set motor channel (0-15 for PCA9685)
+# Choose the motor channel (0 to 15) on the PCA9685 board.
 motor_channel = 15
 
-# Main loop: receive command and update PWM signal
 print("Enter a speed value between -1.0 (full reverse) and 1.0 (full forward).")
 try:
     while True:
-        # ***Replace this with input from control system later
+        # Replace the input section with your control system interface if needed.
         user_input = input("Enter speed: ")
         try:
             speed = float(user_input)
@@ -55,10 +53,11 @@ try:
                 print("Speed must be between -1.0 and 1.0.")
                 continue
         except ValueError:
-            print("Invalid input. Please enter a number.")
+            print("Invalid input. Please enter a valid number.")
             continue
 
         pwm_value = speed_to_pwm(speed)
+        # Set the PWM duty cycle for the motor channel.
         pca.channels[motor_channel].duty_cycle = pwm_value
 
         print(f"Speed set to {speed}, PWM count: {pwm_value}")
