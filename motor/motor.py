@@ -41,7 +41,7 @@ def speed_to_pwm(speed):
 
 # CONTROL THIS MOTOR
 # Set motor channel (0-15 for PCA9685)
-motor_channel = 0
+motor_channel = 15
 
 # Main loop: receive command and update PWM signal
 print("Enter a speed value between -1.0 (full reverse) and 1.0 (full forward).")
