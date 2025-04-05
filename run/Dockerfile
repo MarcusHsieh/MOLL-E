@@ -1,0 +1,13 @@
+FROM dustynv/ros:humble-ros-core-l4t-r32.7.1
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    python3-smbus \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /MOLL-E
+
+# Launch file or entrypoint
+
+# ENTRYPOINT ["/bin/bash"]
