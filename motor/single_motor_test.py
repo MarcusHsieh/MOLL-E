@@ -8,7 +8,7 @@ MODE2   = 0x01
 PRE_SCALE = 0xFE
 LED0_ON_L = 0x06
 
-# Create an SMBus instance for I2C bus 1
+# Create an SMBus instance for I2C bus 1 (Jetson Nano)
 bus = smbus.SMBus(1)
 
 def reset():
@@ -23,7 +23,7 @@ def set_pwm_freq(freq):
     
       prescale = round(25e6 / (4096 * freq)) - 1
     """
-    prescaleval = 25000000.0    # 25 MHz
+    prescaleval = 25000000.0  # 25 MHz
     prescaleval /= 4096.0
     prescaleval /= float(freq)
     prescaleval -= 1.0
@@ -56,39 +56,40 @@ def set_pwm(channel, on, off):
 
 def speed_to_pwm(speed):
     """
-    Convert a speed value (-1.0 to 1.0) into a 12-bit PWM count for a 20ms period.
+    Convert a speed value (-1.0 to 1.0) into a 12-bit PWM count.
     
-    Mapping:
-      -1.0 --> ~1.0 ms pulse width (full reverse)
-       0.0 --> ~1.5 ms pulse width (neutral)
-       1.0 --> ~2.0 ms pulse width (full forward)
+    Calibrated mapping:
+      -1.0 --> ~1.1 ms pulse (full reverse)
+       0.0 --> ~1.6 ms pulse (neutral)
+       1.0 --> ~2.1 ms pulse (full forward)
        
-    With 4096 counts over 20ms, each ms is roughly 204.8 counts.
+    With 4096 counts over a 20 ms period (50Hz), each ms is roughly 204.8 counts.
     """
-    counts_per_ms = 4096 / 20.0  # ~204.8 counts per ms
+    # Calibrated pulse widths (in milliseconds)
+    pulse_min = 1.1      # full reverse pulse width
+    pulse_neutral = 1.6  # neutral pulse width
+    pulse_max = 2.1      # full forward pulse width
 
-    pulse_min = 1.0      # ms (full reverse)
-    pulse_neutral = 1.5  # ms (neutral)
-    pulse_max = 2.0      # ms (full forward)
+    counts_per_ms = 4096 / 20.0  # ~204.8 counts per ms
 
     count_min = int(pulse_min * counts_per_ms)
     count_neutral = int(pulse_neutral * counts_per_ms)
     count_max = int(pulse_max * counts_per_ms)
 
     if speed < 0:
-        # For negative speeds, map linearly from neutral to full reverse
+        # For negative speeds, interpolate from neutral down to count_min
         pwm_count = count_neutral + int((count_neutral - count_min) * speed)
     else:
-        # For positive speeds, map linearly from neutral to full forward
+        # For positive speeds, interpolate from neutral up to count_max
         pwm_count = count_neutral + int((count_max - count_neutral) * speed)
 
-    # Clamp the value to the valid range
+    # Clamp the pwm_count to the valid range
     pwm_count = max(min(pwm_count, count_max), count_min)
     return pwm_count
 
 # Initialize the PCA9685
 reset()
-set_pwm_freq(50)  # 50 Hz (20 ms period)
+set_pwm_freq(50)  # Set frequency to 50Hz (20ms period)
 
 # Choose the motor channel (0 to 15)
 motor_channel = 15
