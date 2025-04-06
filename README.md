@@ -17,6 +17,14 @@ docker build -t molle-image .
 ```bash
 ./run/jetson.sh
 ```
+> Build
+```bash
+colcon build
+```
+> Source
+```bash
+source install/setup.bash
+```
 > Launch everything
 ```bash
 ros2 launch molle_launch molle.launch.py
@@ -25,7 +33,7 @@ ros2 launch molle_launch molle.launch.py
 ## Motors
 > Start motor node(Jetson)
 ```bash
-ros2 run motor_pkg motor_controller_node
+ros2 run motor_ros2 motor_controller_node
 ```
 > Testing (Laptop)
 ```bash

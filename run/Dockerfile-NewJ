@@ -1,0 +1,121 @@
+# Use an ARG for the ROS distro for potentially easier maintenance
+ARG ROS_DISTRO=humble
+ARG BASE_IMAGE_TAG=humble-ros-core-l4t-r32.7.1
+FROM dustynv/ros:${BASE_IMAGE_TAG}
+
+# --- Layer 1: Core System Dependencies & ROS Setup ---
+# Least likely to change. Install essentials needed for subsequent steps.
+# Combine apt update, install, clean into one command to reduce layer size.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    # --- Python Tools ---
+    python3-colcon-common-extensions \
+    python3-vcstool \
+    python3-rosdep \
+    python3-pip \
+    python3-smbus \
+    # --- Libraries needed by ROS packages or build ---
+    libeigen3-dev \
+    libyaml-cpp-dev \
+    libi2c-dev \
+    # --- Utilities ---
+    apt-utils \
+    # Cleanup within the same RUN command
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Initialize rosdep (run separately for better caching if base lists are stable)
+# Combining init/update is fine. Handles case where init might fail if already done.
+RUN rosdep init || echo "rosdep already initialized." && \
+    rosdep update
+
+# Set working directory early
+WORKDIR /MOLL-E
+
+# --- Layer 2: Fetch External ROS Package Sources ---
+# This layer rebuilds only if the list of packages in rosinstall_generator changes.
+# No changes needed here, looks good.
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+    mkdir -p src/external && \
+    echo "Generating rosinstall file..." && \
+    rosinstall_generator --deps --rosdistro ${ROS_DISTRO} \
+        tf2_sensor_msgs \
+        slam_toolbox \
+        ignition_math6_vendor \
+        ignition_cmake2_vendor \
+        > ros2.${ROS_DISTRO}.external.rosinstall && \
+    echo "--- Generated rosinstall file contents: ---" && \
+    cat ros2.${ROS_DISTRO}.external.rosinstall && \
+    echo "--- Importing sources using vcs... ---" && \
+    vcs import src/external < ros2.${ROS_DISTRO}.external.rosinstall || (echo "ERROR: vcs import failed." && exit 1) && \
+    echo "--- Listing contents of src/external (to verify download): ---" && \
+    ls -l src/external
+
+# --- Layer 3: Install ROS Dependencies ---
+# This layer rebuilds if fetched sources change (Layer 2) or if core system deps change (Layer 1).
+# Combine apt update, rosdep, clean into one RUN.
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+    echo "--- Updating apt cache before rosdep... ---" && \
+    apt-get update && \
+    echo "--- Running rosdep install... ---" && \
+    # It's generally safer to update rosdep lists just before installing
+    rosdep update && \
+    rosdep install -y --ignore-src --from-paths src/external --rosdistro ${ROS_DISTRO} \
+        --skip-keys " \
+            ignition-math6 \
+            ignition-cmake2 \
+            rti-connext-dds-6.0.1 \
+            ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test \
+            ament_lint_auto ament_lint ament_lint_common ament_lint_cmake \
+            ament_lint_cpplint ament_lint_flake8 ament_lint_cppcheck ament_lint_pep257 \
+            ament_lint_pycodestyle ament_lint_uncrustify ament_lint_xmllint \
+            osrf_testing_tools_cpp performance_test_fixture googletest_gmock_vendor \
+            googletest_gtest_vendor launch_testing launch_testing_ament_cmake \
+            launch_testing_ros test_interface_files rviz_visual_testing_framework \
+        " \
+    # Cleanup within the same RUN command
+    && echo "--- Cleaning apt cache after rosdep... ---" && \
+    apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Layer 4: Install *Your* Additional/Frequently Changing System Dependencies ---
+# **** THIS IS WHERE YOU ADD NEW SYSTEM DEPENDENCIES ****
+# Combine apt and pip installs into one layer if they change together often.
+# Use --no-cache-dir for pip to reduce layer size.
+# Removed the empty apt-get install part.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        # Add any NEW apt packages needed HERE
+        # e.g., some-other-utility \
+    # Install pip packages
+    && pip3 install --no-cache-dir \
+        tornado \
+        simplejpeg \
+    # Cleanup within the same RUN command
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Layer 5: Build the Workspace ---
+# This is the slowest step. It only rebuilds if Layer 2, 3 or 4 changed.
+# Optional: Add --parallel-workers 1 or 2 if builds fail due to OOM errors on Nano.
+# This will make the build slower but potentially more reliable.
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+    echo "--- Building workspace with colcon... ---" && \
+    colcon build \
+        --merge-install \
+        --symlink-install \
+        --base-paths src/external \
+        # Uncomment the next line if build fails due to RAM limits
+        # --parallel-workers 1 \
+    && echo "--- Cleaning up build artifacts and sources... ---" && \
+    # Keep install, remove sources and build artifacts
+    rm -rf src build log install/COLCON_IGNORE
+
+# --- Layer 6: Runtime Configuration ---
+# Copies/configures things needed at runtime.
+# No changes needed here.
+RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc && \
+    echo "source /MOLL-E/install/setup.bash" >> ~/.bashrc
+
+CMD ["/bin/bash"]
