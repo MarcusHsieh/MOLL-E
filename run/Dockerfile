@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y \
     apt-utils \
     python3-smbus \
     libi2c-dev \
-    ros-humble-robot-localization \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
