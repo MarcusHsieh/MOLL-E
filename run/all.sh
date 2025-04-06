@@ -35,4 +35,8 @@ echo "Motor Controller node launched."
 ros2 launch slam_toolbox online_sync_launch.py &
 echo "SLAM Toolbox launched."
 
+# Launch rosboard node
+ros2 run rosboard rosboard_node &
+echo "rosboard launched."
+
 wait

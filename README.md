@@ -1,5 +1,8 @@
 # MOLL-E
 
+## Docker
+Working: Dockerfile-Num3 @ molle-num3
+
 ## Setup
 
 ```
@@ -90,6 +93,12 @@ ros2 launch mpu6050driver mpu6050driver_launch.py
 | Nodes | Topics |
 | --- | --- |
 | /mpu6050driver_node | /imu |
+
+## Rosboard
+> Start websocket @ <ip>:8888
+```bash
+ros2 run rosboard rosboard_node
+```
 
 ## Other
 > See all nodes graph (Laptop)
