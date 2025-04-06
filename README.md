@@ -52,9 +52,9 @@ turn_scale = 1.0
 | --- | --- |
 | /motor_controller_node | /cmd_vel_filtered |
 
-## LiDAR
+## LIDAR
 
-Start LiDAR Node
+Start LIDAR Node
 ```bash
 ros2 launch LIDAR_pkg ld14p.launch.py
 ```
@@ -63,3 +63,13 @@ Launch rviz2
 ```bash
 rviz2 -d src/LIDAR_pkg/rviz2/ldlidar.rviz
 ```
+| Nodes | Topics |
+| --- | --- |
+| /base_link_to_base_laser_ld14p | /pointcloud2d |
+| /ldlidar_publisher_ld14 | /scan |
+| | /tf_static|
+
+## IMU
+| Nodes | Topics |
+| --- | --- |
+| /mpu6050driver_node | /imu |
