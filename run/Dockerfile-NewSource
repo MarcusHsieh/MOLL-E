@@ -111,7 +111,7 @@ RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
     rm -rf src build log install/COLCON_IGNORE
 
 # --- Layer 5: Runtime Configuration ---
-# Add the workspace setup to the bashrc for convenience
+# Add the workspace setup to the bashrc for convenience 
 RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc && \
     echo "source /MOLL-E_ws/install/setup.bash" >> ~/.bashrc
 
