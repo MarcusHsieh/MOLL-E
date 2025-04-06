@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Joysticks</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="nipplejs.min.js"></script>
+</head>
+<body>
+    <h1>Web Joysticks for ROS 2 /joy</h1>
+    <div class="joystick-container">
+        <div id="joystick-left" class="joystick-zone">
+            <p>Forward/Backward</p>
+        </div>
+        <div id="joystick-right" class="joystick-zone">
+            <p>Rotate Left/Right</p>
+        </div>
+    </div>
+    <div id="status">Status: Disconnected</div>
+    <div id="data-display">
+        Left Y: 0.00, Right X: 0.00
+    </div>
+
+    <!-- custom joystick logic -->
+    <script src="joystick.js"></script>
+</body>
+</html>
