@@ -1,6 +1,7 @@
-FROM dustynv/ros:humble-ros-core-l4t-r32.7.1
+FROM dustynv/ros:humble-ros-core-l4T-r32.7.1
 
 # System dependencies
+# Added python3-vcstool explicitly, python3-rosdep
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -10,25 +11,69 @@ RUN apt-get update && apt-get install -y \
     apt-utils \
     python3-smbus \
     libi2c-dev \
-    # vcs \ 
+    python3-vcstool \
+    python3-rosdep \
     && rm -rf /var/lib/apt/lists/*
+
+# Initialize rosdep (important if not done in base image or if lists are stale)
+# Running this separately makes debugging easier
+RUN rosdep init || echo "rosdep already initialized." && \
+    rosdep update
 
 # Set working directory
 WORKDIR /MOLL-E
 
-# Build external packages: tf2_sensor_msgs and slam_toolbox
-# This step uses rosinstall_generator to create a rosinstall file for the two packages
+# Build external packages: tf2_sensor_msgs, slam_toolbox, and necessary Ignition dependencies
+# This step uses rosinstall_generator to create a rosinstall file for the packages
 # then uses vcs to import them into src/external, installs any dependencies via rosdep,
 # builds them with colcon, and finally cleans up the source.
 RUN source /opt/ros/humble/install/setup.bash && \
     mkdir -p src/external && \
-    rosinstall_generator --deps --rosdistro humble tf2_sensor_msgs slam_toolbox > ros2.humble.external.rosinstall && \
+    echo "Generating rosinstall file..." && \
+    # Add ignition vendor packages to the generator list
+    # This ensures their source code is fetched, allowing them to be built locally
+    rosinstall_generator --deps --rosdistro humble \
+        tf2_sensor_msgs \
+        slam_toolbox \
+        ignition_math6_vendor \
+        ignition_cmake2_vendor \
+        > ros2.humble.external.rosinstall && \
+    echo "--- Generated rosinstall file contents: ---" && \
     cat ros2.humble.external.rosinstall && \
+    echo "--- Importing sources using vcs... ---" && \
     vcs import src/external < ros2.humble.external.rosinstall && \
+    echo "--- Updating apt cache... ---" && \
     apt-get update && \
-    rosdep install -y --ignore-src --from-paths src/external --rosdistro humble --skip-keys "ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test ament_lint_auto ament_lint ament_lint_common ament_lint_cmake ament_lint_cpplint ament_lint_flake8 ament_lint_cppcheck ament_lint_pep257 ament_lint_pycodestyle ament_lint_uncrustify ament_lint_xmllint osrf_testing_tools_cpp performance_test_fixture googletest_gmock_vendor googletest_gtest_vendor launch_testing launch_testing_ament_cmake launch_testing_ros test_interface_files rviz_visual_testing_framework" && \
+    echo "--- Running rosdep install... ---" && \
+    # Update rosdep database again just before installing
+    rosdep update && \
+    # Add the problematic RTI key to --skip-keys
+    # Do NOT skip ignition-math6 or ignition-cmake2 here, rosdep should now find
+    # the source in src/external via the vendor packages.
+    rosdep install -y --ignore-src --from-paths src/external --rosdistro humble \
+        --skip-keys " \
+            rti-connext-dds-6.0.1 \
+            ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test \
+            ament_lint_auto ament_lint ament_lint_common ament_lint_cmake \
+            ament_lint_cpplint ament_lint_flake8 ament_lint_cppcheck ament_lint_pep257 \
+            ament_lint_pycodestyle ament_lint_uncrustify ament_lint_xmllint \
+            osrf_testing_tools_cpp performance_test_fixture googletest_gmock_vendor \
+            googletest_gtest_vendor launch_testing launch_testing_ament_cmake \
+            launch_testing_ros test_interface_files rviz_visual_testing_framework \
+        " && \
+    echo "--- Cleaning apt cache... ---" && \
     rm -rf /var/lib/apt/lists/* && \
-    colcon build --merge-install --base-paths src/external && \
-    rm -rf src/external
+    echo "--- Building workspace with colcon... ---" && \
+    # Using --symlink-install can sometimes help avoid issues, --merge-install is good practice in Docker
+    colcon build --merge-install --symlink-install --base-paths src/external && \
+    echo "--- Cleaning up build artifacts and sources... ---" && \
+    # Clean up build/log directories as well
+    rm -rf src build log install/COLCON_IGNORE # Keep install directory
+
+
+# Add the workspace setup to the bashrc for convenience
+# Also source the main ROS setup file first
+RUN echo "source /opt/ros/humble/install/setup.bash" >> ~/.bashrc && \
+    echo "source /MOLL-E/install/setup.bash" >> ~/.bashrc
 
 CMD ["/bin/bash"]
