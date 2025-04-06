@@ -1,12 +1,16 @@
 #!/bin/bash
 set -e
 
+echo "-------------------------"
+echo "Sourcing"
 # SOURCE BEFORE RUNNING COLCON BUILD
 source /opt/ros/humble/setup.bash
 
 if [ -f /MOLL-E/install/local_setup.bash ]; then
   source /MOLL-E/install/local_setup.bash
 fi
+echo "Sourcing complete"
+echo "-------------------------"
 
 echo "-------------------------"
 echo "Running colcon build..."
