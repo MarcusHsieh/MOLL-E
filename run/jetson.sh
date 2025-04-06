@@ -7,7 +7,7 @@ set -e
 echo "--- Setting up variables for Docker ---"
 
 # Mount host MOLL-E folder into container
-HOST_MOLLE_PATH=../../MOLL-E
+HOST_MOLLE_PATH=..
 CONTAINER_MOLLE_PATH=/MOLL-E
 
 # --- Configuration ---
