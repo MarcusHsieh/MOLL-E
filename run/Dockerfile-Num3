@@ -12,12 +12,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Layer 2: Prepare workspace dir and rosdep
-WORKDIR /ws
+WORKDIR /MOLL-E
 RUN rosdep init || echo "rosdep already initialized." && rosdep update
 
 # Layer 3: Copy prepared source code from the build context
 # Assumes you run 'docker build' from '~/molle_jetson_ws' directory
-COPY ./src /ws/src
+# COPY ./src /ws/src
 
 # Layer 4: Install remaining system deps (Optional but recommended)
 # Run rosdep check based on the COPIED source
@@ -33,6 +33,13 @@ RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
     # Clean apt cache if rosdep installed anything
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \ 
+    && pip3 install \
+    tornado \
+    simplejpeg 
+
 # Layer 5: Build the workspace from the COPIED source
 RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     colcon build --symlink-install --parallel-workers 1 \
@@ -41,7 +48,7 @@ RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
     # Leaving src can be useful for debugging inside the container
 
 # Layer 6: Runtime setup
-RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc && \
+RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc && \
     echo "source /ws/install/setup.bash" >> ~/.bashrc
 
 CMD ["/bin/bash"]
