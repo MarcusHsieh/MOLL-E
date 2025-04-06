@@ -17,7 +17,7 @@ RUN rosdep init || echo "rosdep already initialized." && rosdep update
 
 # Layer 3: Copy prepared source code from the build context
 # Assumes you run 'docker build' from '~/molle_jetson_ws' directory
-# COPY ./src /ws/src
+COPY ../src /MOLL-E/src
 
 # Layer 4: Install remaining system deps (Optional but recommended)
 # Run rosdep check based on the COPIED source
