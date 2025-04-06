@@ -131,11 +131,11 @@ def main(args=None):
         rclpy.spin(node)
     except KeyboardInterrupt:
         node.get_logger().info("Shutting down motor controller node...")
-    # On shutdown: set both sides to neutral
-    set_left_speed(0.0)
-    set_right_speed(0.0)
-    node.destroy_node()
-    rclpy.shutdown()
+        # On shutdown: set both sides to neutral
+        node.set_left_speed(0.0)
+        node.set_right_speed(0.0)
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()

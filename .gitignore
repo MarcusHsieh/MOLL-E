@@ -3,6 +3,10 @@ build/*
 install/*
 log/*
 
+src/build/*
+src/log/*
+src/install/*
+
 # Ignore colcon workspace-specific configuration
 /.colcon/
 

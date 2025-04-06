@@ -9,26 +9,12 @@ RUN apt-get update && apt-get install -y \
     python3-colcon-common-extensions \
     apt-utils \
     python3-smbus \
+    python3-opencv \
     libi2c-dev \
-    # vcs \ 
     && rm -rf /var/lib/apt/lists/*
+    
 
 # Set working directory
 WORKDIR /MOLL-E
-
-# Build external packages: tf2_sensor_msgs and slam_toolbox
-# This step uses rosinstall_generator to create a rosinstall file for the two packages
-# then uses vcs to import them into src/external, installs any dependencies via rosdep,
-# builds them with colcon, and finally cleans up the source.
-RUN source /opt/ros/humble/setup.bash && \
-    mkdir -p src/external && \
-    rosinstall_generator --deps --rosdistro humble tf2_sensor_msgs slam_toolbox > ros2.humble.external.rosinstall && \
-    cat ros2.humble.external.rosinstall && \
-    vcs import src/external < ros2.humble.external.rosinstall && \
-    apt-get update && \
-    rosdep install -y --ignore-src --from-paths src/external --rosdistro humble --skip-keys "ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test ament_lint_auto ament_lint ament_lint_common ament_lint_cmake ament_lint_cpplint ament_lint_flake8 ament_lint_cppcheck ament_lint_pep257 ament_lint_pycodestyle ament_lint_uncrustify ament_lint_xmllint osrf_testing_tools_cpp performance_test_fixture googletest_gmock_vendor googletest_gtest_vendor launch_testing launch_testing_ament_cmake launch_testing_ros test_interface_files rviz_visual_testing_framework" && \
-    rm -rf /var/lib/apt/lists/* && \
-    colcon build --merge-install --base-paths src/external && \
-    rm -rf src/external
 
 CMD ["/bin/bash"]
