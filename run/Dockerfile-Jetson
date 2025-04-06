@@ -64,16 +64,28 @@ RUN source /opt/ros/humble/install/setup.bash && \
             launch_testing_ros test_interface_files rviz_visual_testing_framework \
         " && \
     echo "--- Cleaning apt cache... ---" && \
-    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/lib/apt/lists/* && 
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \ 
+    && pip3 install \
+    tornado \
+    simplejpeg 
+
+# --- Layer 5: Build the Workspace ---
+# This is the slowest step. It only rebuilds if Layer 2, 3 or 4 changed.
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
     echo "--- Building workspace with colcon... ---" && \
     colcon build --merge-install --symlink-install --base-paths src/external && \
     echo "--- Cleaning up build artifacts and sources... ---" && \
+    # Keep install, remove sources and build artifacts
     rm -rf src build log install/COLCON_IGNORE
 
-
+# --- Layer 6: Runtime Configuration ---
+# Copies/configures things needed at runtime.
 # Add the workspace setup to the bashrc for convenience
-# Also source the main ROS setup file first
-RUN echo "source /opt/ros/humble/install/setup.bash" >> ~/.bashrc && \
+RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc && \
     echo "source /MOLL-E/install/setup.bash" >> ~/.bashrc
 
 CMD ["/bin/bash"]

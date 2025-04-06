@@ -4,3 +4,6 @@
 [submodule "src/ldlidar_sl_ros2"]
 	path = src/ldlidar_sl_ros2
 	url = https://github.com/MarcusHsieh/ldlidar_sl_ros2.git
+[submodule "src/rosboard"]
+	path = src/rosboard
+	url = https://github.com/dheera/rosboard.git
