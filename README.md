@@ -1,6 +1,7 @@
 # MOLL-E
 
 ## Setup
+
 ```bash
 cd run
 ```
@@ -14,7 +15,7 @@ docker build -t molle-image .
 ## Motors
 > On Jetson
 ```bash
-ros2 run molle_motor motor_controller_node
+ros2 run motor_pkg motor_controller_node
 ```
 > On Laptop
 ```bash
@@ -52,10 +53,10 @@ turn_scale = 1.0
 
 Start LiDAR Node
 ```bash
-ros2 launch ldlidar_sl_ros2 ld14p.launch.py
+ros2 launch LIDAR_pkg ld14p.launch.py
 ```
 
 Launch rviz2
 ```bash
-rviz2 -d src/ldlidar_sl_ros2/rviz2/ldlidar.rviz 
+rviz2 -d src/LIDAR_pkg/rviz2/ldlidar.rviz
 ```

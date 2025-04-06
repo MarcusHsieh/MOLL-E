@@ -4,3 +4,12 @@
 [submodule "src/src/ros2_mpu6050_driver"]
 	path = src/src/ros2_mpu6050_driver
 	url = https://github.com/hiwad-aziz/ros2_mpu6050_driver.git
+[submodule "src/ldlidar_sl_ros2"]
+	path = src/ldlidar_sl_ros2
+	url = https://github.com/ldrobotSensorTeam/ldlidar_sl_ros2.git
+[submodule "src/IMU_pkg"]
+	path = src/IMU_pkg
+	url = https://github.com/hiwad-aziz/ros2_mpu6050_driver.git
+[submodule "src/LIDAR_pkg"]
+	path = src/LIDAR_pkg
+	url = https://github.com/ldrobotSensorTeam/ldlidar_sl_ros2.git
