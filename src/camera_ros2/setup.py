@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'camera_ros2'
+package_name = 'camera_node'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'camera_node = camera_ros2.camera_node:main'
+            'camera_node = camera_node.camera_node:main'
         ],
     },
 )
