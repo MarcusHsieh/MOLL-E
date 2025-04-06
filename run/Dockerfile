@@ -20,7 +20,7 @@ WORKDIR /MOLL-E
 # This step uses rosinstall_generator to create a rosinstall file for the two packages
 # then uses vcs to import them into src/external, installs any dependencies via rosdep,
 # builds them with colcon, and finally cleans up the source.
-RUN source /opt/ros/humble/setup.bash && \
+RUN source /opt/ros/humble/install/setup.bash && \
     mkdir -p src/external && \
     rosinstall_generator --deps --rosdistro humble tf2_sensor_msgs slam_toolbox > ros2.humble.external.rosinstall && \
     cat ros2.humble.external.rosinstall && \
