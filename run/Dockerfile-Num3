@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Layer 2: Prepare workspace dir and rosdep
 WORKDIR /MOLL-E
 RUN rosdep init || echo "rosdep already initialized." && rosdep update
-
+RUN pwd
 # Layer 3: Copy prepared source code from the build context
 # Assumes you run 'docker build' from '~/molle_jetson_ws' directory
 COPY ./src /MOLL-E/src
