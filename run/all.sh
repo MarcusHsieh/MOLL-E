@@ -25,4 +25,8 @@ echo "IMU node launched."
 ros2 run motor_pkg motor_controller_node &
 echo "Motor Controller node launched."
 
+# Launch the SLAM Toolbox node
+ros2 launch slam_toolbox online_sync_launch.py
+echo "SLAM Toolbox launched."
+
 wait
