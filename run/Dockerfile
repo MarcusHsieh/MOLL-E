@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     libeigen3-dev \
+    ros-humble-eigen3-cmake-module \
     libyaml-cpp-dev \
     python3-colcon-common-extensions \
     apt-utils \
@@ -15,10 +16,4 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /MOLL-E
 
-# Launch file or entrypoint
-# COPY new_entrypoint.sh /usr/local/bin/new_entrypoint.sh
-# RUN chmod +x /usr/local/bin/new_entrypoint.sh
-
-# Set new entrypoint
-# ENTRYPOINT ["/usr/local/bin/new_entrypoint.sh"]
 CMD ["/bin/bash"]

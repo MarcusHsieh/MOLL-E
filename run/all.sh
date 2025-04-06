@@ -1,3 +1,7 @@
+# Make sure ROS 2 Humble environment sourced
+source /opt/ros/humble/setup.bash
+
+
 echo "-------------------------"
 echo "Running colcon build..."
 cd /MOLL-E
@@ -12,6 +16,8 @@ else
     echo "Warning: /MOLL-E/install/setup.bash not found."
 fi
 echo "-------------------------"
+
+
 
 # Launch the LiDAR node
 ros2 launch ldlidar_sl_ros2 ld14p.launch.py &
