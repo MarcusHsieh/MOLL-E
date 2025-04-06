@@ -70,6 +70,9 @@ rviz2 -d src/LIDAR_pkg/rviz2/ldlidar.rviz
 | | /tf_static|
 
 ## IMU
+```bash
+ros2 launch mpu6050driver mpu6050driver_launch.py
+```
 | Nodes | Topics |
 | --- | --- |
 | /mpu6050driver_node | /imu |
