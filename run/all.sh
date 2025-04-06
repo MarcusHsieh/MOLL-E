@@ -32,10 +32,10 @@ echo "IMU node launched."
 wget https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js -O web/nipplejs.min.js
 # Joystick
 ros2 run web_joy_publisher web_joy_node
-echo "Camera node launched."
+echo "Joystick node launched."
 
 # Launch the Motor Controller node
-ros2 run motor_pkg motor_controller_node &
+ros2 run motor_ros2 motor_controller_node &
 echo "Motor Controller node launched."
 
 # Launch the SLAM Toolbox node
