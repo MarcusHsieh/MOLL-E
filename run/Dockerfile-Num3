@@ -42,7 +42,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Layer 5: Build the workspace from the COPIED source
 RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
-    colcon build --symlink-install --parallel-workers 1 \
+    colcon build --symlink-install --parallel-workers 1 
     # Optionally cleanup src after build if image size is critical
     # && rm -rf src build log
     # Leaving src can be useful for debugging inside the container
