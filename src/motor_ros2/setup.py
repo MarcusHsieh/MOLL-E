@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'motor_pkg'
+package_name = 'motor_ros2'
 
 setup(
     name=package_name,
@@ -17,10 +17,10 @@ setup(
     maintainer_email='marcus.j.hsieh@gmail.com',
     description='Motor control node for MOLL-E using PCA9685 and VEX motor controllers',
     license='Apache-2.0',
-    # tests_require=['pytest'],
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'motor_controller_node = molle_motor.motor_controller_node:main'
+            'motor_controller_node = motor_ros2.motor_controller_node:main'
         ],
     },
 )

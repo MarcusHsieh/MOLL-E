@@ -6,6 +6,9 @@
 git clone --recursive https://github.com/MarcusHsieh/MOLL-E.git
 ```
 ```bash
+source /opt/ros/humble/install/setup.bash
+```
+```bash
 cd run
 ```
 ```bash

@@ -13,7 +13,7 @@ CONTAINER_MOLLE_PATH=/MOLL-E
 # --- Configuration ---
 ROS_DOMAIN_ID_TO_USE=30
 # DOCKER_IMAGE="dustynv/ros:humble-ros-core-l4t-r32.7.1"
-DOCKER_IMAGE="molle-image"
+DOCKER_IMAGE="molle"
 # --- End Configuration ---
 
 echo "Host MOLL-E Folder: ${HOST_MOLLE_PATH}"
