@@ -13,3 +13,6 @@
 [submodule "src/LIDAR_pkg"]
 	path = src/LIDAR_pkg
 	url = https://github.com/ldrobotSensorTeam/ldlidar_sl_ros2.git
+[submodule "IMU_pkg"]
+	path = IMU_pkg
+	url = https://github.com/MarcusHsieh/IMU_pkg.git
