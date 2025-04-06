@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     apt-utils \
     python3-smbus \
     libi2c-dev \
-    vcs \
+    # vcs \ 
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
