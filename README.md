@@ -56,7 +56,7 @@ turn_scale = 1.0
 
 Start LIDAR Node
 ```bash
-ros2 launch LIDAR_pkg ld14p.launch.py
+ros2 launch ldlidar_sl_ros2 ld14p.launch.py 
 ```
 
 Launch rviz2

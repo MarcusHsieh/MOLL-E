@@ -1,6 +1,6 @@
-[submodule "src/LIDAR_pkg"]
-	path = src/LIDAR_pkg
-	url = https://github.com/MarcusHsieh/LIDAR_pkg.git
-[submodule "src/IMU_pkg"]
-	path = src/IMU_pkg
-	url = https://github.com/MarcusHsieh/IMU_pkg.git
+[submodule "src/mpu6050_driver_ros2"]
+	path = src/mpu6050_driver_ros2
+	url = https://github.com/MarcusHsieh/mpu6050_driver_ros2.git
+[submodule "src/ldlidar_sl_ros2"]
+	path = src/ldlidar_sl_ros2
+	url = https://github.com/MarcusHsieh/ldlidar_sl_ros2.git
