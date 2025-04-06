@@ -14,18 +14,20 @@ docker build -t molle-image .
 ```bash
 ./run/jetson.sh
 ```
+> Launch everything
+```bash
+ros2 launch molle_launch molle.launch.py
+```
 
 ## Motors
-> On Jetson
+> Start motor node(Jetson)
 ```bash
 ros2 run motor_pkg motor_controller_node
 ```
-> On Laptop
+> Testing (Laptop)
 ```bash
 ros2 topic pub /cmd_vel_filtered geometry_msgs/Twist "{linear: {x: 0.5, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.1}}"
 ```
-
-### Motor Control
 
 - **Left Speed = linear.x + (turn_scale × angular.z)**
 - **Right Speed = linear.x − (turn_scale × angular.z)**
@@ -54,12 +56,12 @@ turn_scale = 1.0
 
 ## LIDAR
 
-Start LIDAR Node
+> Start LIDAR node (Jetson)
 ```bash
 ros2 launch ldlidar_sl_ros2 ld14p.launch.py 
 ```
 
-Launch rviz2
+> Launch rviz2 (Laptop)
 ```bash
 rviz2 -d src/ldlidar_sl_ros2/rviz2/ldlidar.rviz
 ```
@@ -70,9 +72,20 @@ rviz2 -d src/ldlidar_sl_ros2/rviz2/ldlidar.rviz
 | | /tf_static|
 
 ## IMU
+> Start mpu6950 node (Jetson)
 ```bash
 ros2 launch mpu6050driver mpu6050driver_launch.py
 ```
 | Nodes | Topics |
 | --- | --- |
 | /mpu6050driver_node | /imu |
+
+## Other
+> See all nodes graph (Laptop)
+```bash
+ros2 run rqt_graph rqt_graph
+```
+> See TF Tree (Laptop)
+```bash
+ros2 run tf2_tools view_frames
+```
