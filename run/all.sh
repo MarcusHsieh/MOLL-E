@@ -4,7 +4,10 @@ source /opt/ros/humble/install/setup.bash
 # for joystick
 # pip3 install websockets
 
-run/ros2_install.sh slam_toolbox ignition-cmake2 ignition-math6
+
+export ROS_WORKSPACE=/MOLL-E
+
+run/ros2_install.sh slam_toolbox ignition-cmake2 ignition-math6 nav2-map-server nav2-amcl lifecycle-manager usb_cam
 
 echo "-------------------------"
 echo "Running colcon build..."
@@ -32,7 +35,10 @@ ros2 launch mpu6050driver mpu6050driver_launch.py &
 echo "IMU node launched."
 
 # Camera
-ros2 run camera_ros2 camera_node
+ros2 launch usb_cam camera.launch.py
+
+ros2 run camera_ros2 camera_node # only fps
+
 echo "Camera node launched."
 
 # wget https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js -O web/nipplejs.min.js
