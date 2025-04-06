@@ -11,5 +11,9 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /MOLL-E
 
 # Launch file or entrypoint
+COPY new_entrypoint.sh /usr/local/bin/new_entrypoint.sh
+RUN chmod +x /usr/local/bin/new_entrypoint.sh
 
-# ENTRYPOINT ["/bin/bash"]
+# Set new entrypoint
+ENTRYPOINT ["/usr/local/bin/new_entrypoint.sh"]
+CMD ["/bin/bash"]
