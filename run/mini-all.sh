@@ -35,7 +35,7 @@ ros2 launch mpu6050driver mpu6050driver_launch.py &
 echo "IMU node launched."
 
 # Camera
-ros2 launch camera_ros2 camera_node.py
+ros2 launch camera_ros2 camera_node.py &
 
 #ros2 run camera_ros2 camera_node # only fps
 
