@@ -27,11 +27,10 @@ WORKDIR /MOLL-E
 # This step uses rosinstall_generator to create a rosinstall file for the packages
 # then uses vcs to import them into src/external, installs any dependencies via rosdep,
 # builds them with colcon, and finally cleans up the source.
+# Build external packages: tf2_sensor_msgs, slam_toolbox, and necessary Ignition dependencies
 RUN source /opt/ros/humble/install/setup.bash && \
     mkdir -p src/external && \
     echo "Generating rosinstall file..." && \
-    # Add ignition vendor packages to the generator list
-    # This ensures their source code is fetched, allowing them to be built locally
     rosinstall_generator --deps --rosdistro humble \
         tf2_sensor_msgs \
         slam_toolbox \
@@ -41,17 +40,20 @@ RUN source /opt/ros/humble/install/setup.bash && \
     echo "--- Generated rosinstall file contents: ---" && \
     cat ros2.humble.external.rosinstall && \
     echo "--- Importing sources using vcs... ---" && \
-    vcs import src/external < ros2.humble.external.rosinstall && \
+    # Add error checking for vcs import
+    vcs import src/external < ros2.humble.external.rosinstall || (echo "ERROR: vcs import failed." && exit 1) && \
+    echo "--- Listing contents of src/external (to verify download): ---" && \
+    ls -l src/external && \
     echo "--- Updating apt cache... ---" && \
     apt-get update && \
     echo "--- Running rosdep install... ---" && \
     # Update rosdep database again just before installing
     rosdep update && \
-    # Add the problematic RTI key to --skip-keys
-    # Do NOT skip ignition-math6 or ignition-cmake2 here, rosdep should now find
-    # the source in src/external via the vendor packages.
+    # *** KEY CHANGE: Added ignition-math6 and ignition-cmake2 to --skip-keys ***
     rosdep install -y --ignore-src --from-paths src/external --rosdistro humble \
         --skip-keys " \
+            ignition-math6 \
+            ignition-cmake2 \
             rti-connext-dds-6.0.1 \
             ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test \
             ament_lint_auto ament_lint ament_lint_common ament_lint_cmake \
@@ -64,11 +66,9 @@ RUN source /opt/ros/humble/install/setup.bash && \
     echo "--- Cleaning apt cache... ---" && \
     rm -rf /var/lib/apt/lists/* && \
     echo "--- Building workspace with colcon... ---" && \
-    # Using --symlink-install can sometimes help avoid issues, --merge-install is good practice in Docker
     colcon build --merge-install --symlink-install --base-paths src/external && \
     echo "--- Cleaning up build artifacts and sources... ---" && \
-    # Clean up build/log directories as well
-    rm -rf src build log install/COLCON_IGNORE # Keep install directory
+    rm -rf src build log install/COLCON_IGNORE
 
 
 # Add the workspace setup to the bashrc for convenience
