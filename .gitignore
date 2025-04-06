@@ -17,7 +17,48 @@ __pycache__/
 # Ignore editor folders (e.g., VSCode)
 .vscode/
 .idea/
+*.code-workspace
 
 # Optionally ignore custom generated files (if any)
 # *.log
 # *.tmp
+
+
+# Ignore build output from ESP-IDF
+BLE/Master/build/*
+BLE/Broadcasters/build/*
+*.bin
+*.elf
+*.map
+
+# Ignore configuration and generated files
+BLE/Master/sdkconfig
+BLE/Broadcasters/sdkconfig
+BLE/Master/sdkconfig.old
+BLE/Broadcasters/sdkconfig.old
+/project_description.json
+
+# Ignore Temporary files
+*.orig
+*.swp
+*.swo
+
+# Ignore ESP-IDF tools and environments
+.env/
+.env.*.json
+*.pydevproject
+*.project
+
+# Ignore CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+
+# Ignore Compiled libraries
+components/*/build/
+components/*/CMakeFiles/
+
+# Ignore Misc
+*.bak
+.DS_Store
+Thumbs.db
