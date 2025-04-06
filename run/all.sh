@@ -4,7 +4,7 @@ source /opt/ros/humble/install/setup.bash
 # for joystick
 # pip3 install websockets
 
-/ros2_install.sh slam_toolbox
+run/ros2_install.sh slam_toolbox
 
 echo "-------------------------"
 echo "Running colcon build..."
