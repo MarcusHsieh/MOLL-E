@@ -40,6 +40,8 @@ docker run -it --rm \
     -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
     -v /dev/i2c-1:/dev/i2c-1 \
     -v /dev/ttyACM0:/dev/ttyACM0 \
+    -v /dev:/dev \
+    -v /tmp/argus_socket:/tmp/argus_socket \
     -e DISPLAY=${DISPLAY} \
     -e ROS_DOMAIN_ID=${ROS_DOMAIN_ID_TO_USE} \
     ${DOCKER_IMAGE}
