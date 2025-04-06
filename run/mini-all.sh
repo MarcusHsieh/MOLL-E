@@ -4,11 +4,10 @@ source /opt/ros/humble/install/setup.bash
 # for joystick
 # pip3 install websockets
 
-# git safe cmd
 
-export ROS_WORKSPACE=/MOLL-E
+# export ROS_WORKSPACE=/MOLL-E
 
-run/ros2_install.sh slam_toolbox ignition-cmake2 ignition-math6 nav2-map-server nav2-amcl lifecycle-manager usb_cam
+# run/ros2_install.sh slam_toolbox ignition-cmake2 ignition-math6 nav2-map-server nav2-amcl lifecycle-manager usb_cam
 
 echo "-------------------------"
 echo "Running colcon build..."
@@ -52,8 +51,8 @@ ros2 run motor_ros2 motor_controller_node &
 echo "Motor Controller node launched."
 
 # Launch the SLAM Toolbox node
-ros2 launch slam_toolbox online_sync_launch.py &
-echo "SLAM Toolbox launched."
+# ros2 launch slam_toolbox online_sync_launch.py &
+# echo "SLAM Toolbox launched."
 
 # Launch rosboard node
 ros2 run rosboard rosboard_node &
