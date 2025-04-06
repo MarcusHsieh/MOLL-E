@@ -14,24 +14,24 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Layer 2: Prepare workspace dir and rosdep
 WORKDIR /MOLL-E
 RUN rosdep init || echo "rosdep already initialized." && rosdep update
-RUN pwd
+
 # Layer 3: Copy prepared source code from the build context
 # Assumes you run 'docker build' from '~/molle_jetson_ws' directory
-COPY src /MOLL-E/src
+# COPY src /MOLL-E/src
 
 # Layer 4: Install remaining system deps (Optional but recommended)
 # Run rosdep check based on the COPIED source
-RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
-    rosdep install --from-paths src --ignore-src -y --rosdistro ${ROS_DISTRO} \
-        --skip-keys " \
-            slam_toolbox tf2_sensor_msgs tf2_eigen tf2_geometry_msgs \
-            tf2_kdl tf2_py tf2_ros tf2_ros_py tf2_tools geometry2 \
-            ignition-math6 ignition-cmake2 ignition_cmake2_vendor \
-            ignition_math6_vendor rti-connext-dds-6.0.1 ament_cmake_gmock \
-            ament_cmake_gtest ament_lint_auto ament_lint_common \
-        " \
-    # Clean apt cache if rosdep installed anything
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+#     rosdep install --from-paths src --ignore-src -y --rosdistro ${ROS_DISTRO} \
+#         --skip-keys " \
+#             slam_toolbox tf2_sensor_msgs tf2_eigen tf2_geometry_msgs \
+#             tf2_kdl tf2_py tf2_ros tf2_ros_py tf2_tools geometry2 \
+#             ignition-math6 ignition-cmake2 ignition_cmake2_vendor \
+#             ignition_math6_vendor rti-connext-dds-6.0.1 ament_cmake_gmock \
+#             ament_cmake_gtest ament_lint_auto ament_lint_common \
+#         " \
+#     # Clean apt cache if rosdep installed anything
+#     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
