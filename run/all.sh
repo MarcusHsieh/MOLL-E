@@ -1,11 +1,11 @@
 # Make sure ROS 2 Humble environment sourced
 source /opt/ros/humble/install/setup.bash
-
+pip3 install websockets
 
 echo "-------------------------"
 echo "Running colcon build..."
 cd /MOLL-E
-colcon build
+colcon build --symlink-install
 echo "colcon build complete."
 echo "-------------------------"
 
@@ -27,12 +27,23 @@ echo "LiDAR node launched."
 ros2 launch mpu6050driver mpu6050driver_launch.py &
 echo "IMU node launched."
 
+# Camera
+
+wget https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js -O web/nipplejs.min.js
+# Joystick
+ros2 run web_joy_publisher web_joy_node
+echo "Joystick node launched."
+
 # Launch the Motor Controller node
-ros2 run motor_pkg motor_controller_node &
+ros2 run motor_ros2 motor_controller_node &
 echo "Motor Controller node launched."
 
 # Launch the SLAM Toolbox node
 ros2 launch slam_toolbox online_sync_launch.py &
 echo "SLAM Toolbox launched."
+
+# Launch rosboard node
+ros2 run rosboard rosboard_node &
+echo "rosboard launched."
 
 wait
