@@ -1,6 +1,8 @@
 # Make sure ROS 2 Humble environment sourced
 source /opt/ros/humble/install/setup.bash
-pip3 install websockets
+
+# for joystick
+# pip3 install websockets
 
 echo "-------------------------"
 echo "Running colcon build..."
