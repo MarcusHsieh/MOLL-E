@@ -17,6 +17,14 @@ docker build -t molle-image .
 ```bash
 ./run/jetson.sh
 ```
+> Build
+```bash
+colcon build
+```
+> Source
+```bash
+source install/setup.bash
+```
 > Launch everything
 ```bash
 ros2 launch molle_launch molle.launch.py
