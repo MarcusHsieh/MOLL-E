@@ -16,3 +16,6 @@
 [submodule "IMU_pkg"]
 	path = IMU_pkg
 	url = https://github.com/MarcusHsieh/IMU_pkg.git
+[submodule "src/--froce"]
+	path = src/--froce
+	url = https://github.com/MarcusHsieh/IMU_pkg.git
