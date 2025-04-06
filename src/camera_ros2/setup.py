@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'camera_node'
+package_name = 'camera_ros2'
 
 setup(
     name=package_name,
@@ -13,14 +13,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='root',
-    maintainer_email='root@todo.todo',
+    maintainer='mj',
+    maintainer_email='marcus.j.hsieh@gmail.com',
     description='TODO: Package description',
-    license='MIT',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'camera_node = camera_node.camera_node:main'
+            'camera_node = camera_ros2.camera_node:main'
         ],
     },
 )
