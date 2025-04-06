@@ -1,3 +1,18 @@
+echo "-------------------------"
+echo "Running colcon build..."
+cd /MOLL-E
+colcon build
+echo "colcon build complete."
+echo "-------------------------"
+
+echo "Sourcing workspace install/setup.bash..."
+if [ -f /MOLL-E/install/setup.bash ]; then
+    source /MOLL-E/install/setup.bash
+else
+    echo "Warning: /MOLL-E/install/setup.bash not found."
+fi
+echo "-------------------------"
+
 # Launch the LiDAR node
 ros2 launch ldlidar_sl_ros2 ld14p.launch.py &
 echo "LiDAR node launched."
