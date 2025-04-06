@@ -61,7 +61,7 @@ ros2 launch ldlidar_sl_ros2 ld14p.launch.py
 
 Launch rviz2
 ```bash
-rviz2 -d src/LIDAR_pkg/rviz2/ldlidar.rviz
+rviz2 -d src/ldlidar_sl_ros2/rviz2/ldlidar.rviz
 ```
 | Nodes | Topics |
 | --- | --- |
