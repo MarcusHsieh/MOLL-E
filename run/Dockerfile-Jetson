@@ -1,7 +1,6 @@
 FROM dustynv/ros:humble-ros-core-l4t-r32.7.1
 
 # System dependencies
-# Added python3-vcstool explicitly, python3-rosdep
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -12,81 +11,13 @@ RUN apt-get update && apt-get install -y \
     python3-smbus \
     python3-opencv \
     libi2c-dev \
-    python3-vcstool \
-    python3-rosdep \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && sudo pip3 install tornado \
+    && sudo pip3 install simplejpeg
 
-# Initialize rosdep (important if not done in base image or if lists are stale)
-# Running this separately makes debugging easier
-RUN rosdep init || echo "rosdep already initialized." && \
-    rosdep update
+
 
 # Set working directory
 WORKDIR /MOLL-E
-
-# Build external packages: tf2_sensor_msgs, slam_toolbox, and necessary Ignition dependencies
-# This step uses rosinstall_generator to create a rosinstall file for the packages
-# then uses vcs to import them into src/external, installs any dependencies via rosdep,
-# builds them with colcon, and finally cleans up the source.
-# Build external packages: tf2_sensor_msgs, slam_toolbox, and necessary Ignition dependencies
-RUN source /opt/ros/humble/install/setup.bash && \
-    mkdir -p src/external && \
-    echo "Generating rosinstall file..." && \
-    rosinstall_generator --deps --rosdistro humble \
-        tf2_sensor_msgs \
-        slam_toolbox \
-        ignition_math6_vendor \
-        ignition_cmake2_vendor \
-        > ros2.humble.external.rosinstall && \
-    echo "--- Generated rosinstall file contents: ---" && \
-    cat ros2.humble.external.rosinstall && \
-    echo "--- Importing sources using vcs... ---" && \
-    # Add error checking for vcs import
-    vcs import src/external < ros2.humble.external.rosinstall || (echo "ERROR: vcs import failed." && exit 1) && \
-    echo "--- Listing contents of src/external (to verify download): ---" && \
-    ls -l src/external && \
-    echo "--- Updating apt cache... ---" && \
-    apt-get update && \
-    echo "--- Running rosdep install... ---" && \
-    # Update rosdep database again just before installing
-    rosdep update && \
-    # *** KEY CHANGE: Added ignition-math6 and ignition-cmake2 to --skip-keys ***
-    rosdep install -y --ignore-src --from-paths src/external --rosdistro humble \
-        --skip-keys " \
-            ignition-math6 \
-            ignition-cmake2 \
-            rti-connext-dds-6.0.1 \
-            ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test \
-            ament_lint_auto ament_lint ament_lint_common ament_lint_cmake \
-            ament_lint_cpplint ament_lint_flake8 ament_lint_cppcheck ament_lint_pep257 \
-            ament_lint_pycodestyle ament_lint_uncrustify ament_lint_xmllint \
-            osrf_testing_tools_cpp performance_test_fixture googletest_gmock_vendor \
-            googletest_gtest_vendor launch_testing launch_testing_ament_cmake \
-            launch_testing_ros test_interface_files rviz_visual_testing_framework \
-        " && \
-    echo "--- Cleaning apt cache... ---" && \
-    rm -rf /var/lib/apt/lists/* && 
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \ 
-    && pip3 install \
-    tornado \
-    simplejpeg 
-
-# --- Layer 5: Build the Workspace ---
-# This is the slowest step. It only rebuilds if Layer 2, 3 or 4 changed.
-RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
-    echo "--- Building workspace with colcon... ---" && \
-    colcon build --merge-install --symlink-install --base-paths src/external && \
-    echo "--- Cleaning up build artifacts and sources... ---" && \
-    # Keep install, remove sources and build artifacts
-    rm -rf src build log install/COLCON_IGNORE
-
-# --- Layer 6: Runtime Configuration ---
-# Copies/configures things needed at runtime.
-# Add the workspace setup to the bashrc for convenience
-RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc && \
-    echo "source /MOLL-E/install/setup.bash" >> ~/.bashrc
 
 CMD ["/bin/bash"]

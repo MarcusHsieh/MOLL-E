@@ -22,9 +22,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libi2c-dev \
     # --- Utilities ---
     apt-utils \
+
     # Cleanup within the same RUN command
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
 
 # Initialize rosdep (run separately for better caching if base lists are stable)
 # Combining init/update is fine. Handles case where init might fail if already done.
@@ -49,7 +50,6 @@ RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
     echo "--- Generated rosinstall file contents: ---" && \
     cat ros2.${ROS_DISTRO}.external.rosinstall && \
     echo "--- Importing sources using vcs... ---" && \
-    vcs import src/external < ros2.${ROS_DISTRO}.external.rosinstall || (echo "ERROR: vcs import failed." && exit 1) && \
     echo "--- Listing contents of src/external (to verify download): ---" && \
     ls -l src/external
 
@@ -91,7 +91,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Install pip packages
     && pip3 install --no-cache-dir \
         tornado \
-        simplejpeg \
     # Cleanup within the same RUN command
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -107,7 +106,7 @@ RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
         --symlink-install \
         --base-paths src/external \
         # Uncomment the next line if build fails due to RAM limits
-        # --parallel-workers 1 \
+        --parallel-workers 1 \
     && echo "--- Cleaning up build artifacts and sources... ---" && \
     # Keep install, remove sources and build artifacts
     rm -rf src build log install/COLCON_IGNORE
