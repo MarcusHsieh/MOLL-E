@@ -1,5 +1,5 @@
 # Make sure ROS 2 Humble environment sourced
-source /opt/ros/humble/setup.bash
+source /opt/ros/humble/install/setup.bash
 
 
 echo "-------------------------"
@@ -32,7 +32,7 @@ ros2 run motor_pkg motor_controller_node &
 echo "Motor Controller node launched."
 
 # Launch the SLAM Toolbox node
-ros2 launch slam_toolbox online_sync_launch.py
+ros2 launch slam_toolbox online_sync_launch.py &
 echo "SLAM Toolbox launched."
 
 wait
