@@ -1,6 +1,6 @@
 # Make sure ROS 2 Humble environment sourced
 source /opt/ros/humble/install/setup.bash
-
+pip3 install websockets
 
 echo "-------------------------"
 echo "Running colcon build..."
@@ -26,6 +26,11 @@ echo "LiDAR node launched."
 # Launch the IMU node
 ros2 launch mpu6050driver mpu6050driver_launch.py &
 echo "IMU node launched."
+
+# Camera
+
+wget https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js -O web/nipplejs.min.js
+# Joystick
 
 # Launch the Motor Controller node
 ros2 run motor_pkg motor_controller_node &
