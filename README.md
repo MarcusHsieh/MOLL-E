@@ -2,6 +2,9 @@
 
 ## Setup
 
+```
+git clone --recursive
+```
 ```bash
 cd run
 ```
