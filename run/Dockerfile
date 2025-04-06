@@ -5,7 +5,6 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
     libeigen3-dev \
-    ros-humble-eigen3-cmake-module \
     libyaml-cpp-dev \
     python3-colcon-common-extensions \
     apt-utils \
