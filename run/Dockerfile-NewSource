@@ -1,0 +1,118 @@
+# Use an ARG for the ROS distro for potentially easier maintenance
+ARG ROS_DISTRO=humble
+ARG BASE_IMAGE_TAG=humble-ros-core-l4t-r32.7.1
+FROM dustynv/ros:${BASE_IMAGE_TAG}
+
+# --- Layer 1: Core System Dependencies & Build Tools ---
+# Install essentials needed for fetching sources and building C++/Python code.
+# Least likely to change.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    cmake \
+    git \
+    # --- Python Tools ---
+    python3-colcon-common-extensions \
+    python3-vcstool \
+    python3-pip \
+    python3-smbus \
+    # --- Common Libraries (Likely needed by various packages) ---
+    # Install these via apt as they are usually available and fundamental
+    libeigen3-dev \
+    libyaml-cpp-dev \
+    libi2c-dev \
+    # --- Utilities ---
+    apt-utils \
+    # Cleanup within the same RUN command
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory early - This will be our Colcon workspace root
+WORKDIR /MOLL-E_ws
+
+# --- Layer 2: Fetch ALL Required Sources ---
+# Download sources for target packages (slam_toolbox, tf2_sensor_msgs)
+# AND their source dependencies (ignition_math6_vendor, etc.) into the src directory.
+# This layer rebuilds only if the list of packages changes.
+# Note: We are putting EVERYTHING into the main 'src' directory now.
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+    mkdir -p src && \
+    echo "Generating rosinstall file for ALL sources..." && \
+    # Use rosinstall_generator to find ROS package dependencies
+    # Explicitly add vendor packages for things we MUST build from source
+    rosinstall_generator --deps --rosdistro ${ROS_DISTRO} \
+        slam_toolbox \
+        tf2_sensor_msgs \
+        ignition_math6_vendor \
+        ignition_cmake2_vendor \
+        # Add other direct ROS dependencies of slam_toolbox/tf2_sensor_msgs if needed,
+        # though --deps should handle most. Example: geometry2 if not pulled by --deps
+        # geometry2 \
+        > source_deps.rosinstall && \
+    echo "--- Generated rosinstall file contents: ---" && \
+    cat source_deps.rosinstall && \
+    echo "--- Importing sources using vcs into ./src ---" && \
+    # Import directly into the 'src' directory of the workspace
+    vcs import src < source_deps.rosinstall || (echo "ERROR: vcs import failed." && exit 1) && \
+    echo "--- Listing contents of src (to verify download): ---" && \
+    ls -l src
+
+# --- Layer 3: Install any *remaining* fundamental system dependencies ---
+# Run rosdep install AFTER getting sources, focusing only on fundamental libs.
+# We explicitly skip the keys for packages we know we have the source for.
+# This step is OPTIONAL but can catch missing basic libraries not installed in Layer 1.
+# If Layer 4 fails complaining about a missing system library (e.g., libpng-dev),
+# you might need to uncomment this or add the library to Layer 1.
+# RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+#     apt-get update && \
+#     rosdep init || echo "rosdep already initialized." && \
+#     rosdep update && \
+#     rosdep install -y --ignore-src --from-paths src --rosdistro ${ROS_DISTRO} \
+#         --skip-keys " \
+#             slam_toolbox \
+#             tf2_sensor_msgs \
+#             tf2_eigen \
+#             tf2_geometry_msgs \
+#             tf2_kdl \
+#             tf2_py \
+#             tf2_ros \
+#             tf2_ros_py \
+#             tf2_tools \
+#             geometry2 \
+#             ignition-math6 \
+#             ignition-cmake2 \
+#             ignition_cmake2_vendor \
+#             ignition_math6_vendor \
+#             rti-connext-dds-6.0.1 \
+#             ament_cmake_gmock ament_cmake_gtest ament_cmake_pytest ament_cmake_test \
+#             ament_lint_auto ament_lint ament_lint_common ament_lint_cmake \
+#             ament_lint_cpplint ament_lint_flake8 ament_lint_cppcheck ament_lint_pep257 \
+#             ament_lint_pycodestyle ament_lint_uncrustify ament_lint_xmllint \
+#             osrf_testing_tools_cpp performance_test_fixture googletest_gmock_vendor \
+#             googletest_gtest_vendor launch_testing launch_testing_ament_cmake \
+#             launch_testing_ros test_interface_files rviz_visual_testing_framework \
+#         " \
+#     && apt-get clean \
+#     && rm -rf /var/lib/apt/lists/*
+
+# --- Layer 4: Build the ENTIRE Workspace from Source ---
+# This is the slowest step. Builds everything in the 'src' directory.
+# It only rebuilds if Layer 1 or Layer 2 changed (or Layer 3 if uncommented).
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
+    echo "--- Building ENTIRE workspace with colcon... ---" && \
+    # Build everything in src/. Use --event-handlers for more verbose output.
+    # Use --parallel-workers 1 on Nano to prevent OOM errors.
+    colcon build \
+        --merge-install \
+        --symlink-install \
+        --event-handlers console_direct+ \
+        --parallel-workers 1 \
+    && echo "--- Cleaning up build artifacts and sources... ---" && \
+    # Keep install, remove sources and build artifacts to save space
+    rm -rf src build log install/COLCON_IGNORE
+
+# --- Layer 5: Runtime Configuration ---
+# Add the workspace setup to the bashrc for convenience
+RUN echo "source /opt/ros/${ROS_DISTRO}/install/setup.bash" >> ~/.bashrc && \
+    echo "source /MOLL-E_ws/install/setup.bash" >> ~/.bashrc
+
+CMD ["/bin/bash"]
