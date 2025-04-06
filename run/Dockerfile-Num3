@@ -21,7 +21,7 @@ COPY ./src /ws/src
 
 # Layer 4: Install remaining system deps (Optional but recommended)
 # Run rosdep check based on the COPIED source
-RUN source /opt/ros/${ROS_DISTRO}/setup.bash && \
+RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
     rosdep install --from-paths src --ignore-src -y --rosdistro ${ROS_DISTRO} \
         --skip-keys " \
             slam_toolbox tf2_sensor_msgs tf2_eigen tf2_geometry_msgs \
