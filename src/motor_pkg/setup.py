@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'molle_motor'
+package_name = 'motor_pkg'
 
 setup(
     name=package_name,

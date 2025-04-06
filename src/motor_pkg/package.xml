@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>molle_motor</name>
+  <name>motor_pkg</name>
   <version>0.0.0</version>
   <description>Motor control node for MOLL-E using PCA9685 and VEX motor controllers</description>
   <maintainer email="marcus.j.hsieh@gmail.com">mj</maintainer>
