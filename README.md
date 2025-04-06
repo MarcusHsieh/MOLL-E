@@ -26,6 +26,9 @@ ros2 topic pub /cmd_vel_filtered geometry_msgs/Twist "{linear: {x: 0.5, y: 0.0, 
 - **Left Speed = linear.x + (turn_scale × angular.z)**
 - **Right Speed = linear.x − (turn_scale × angular.z)**
 
+> `linear.x` = magnitude (-) back (+) forward
+> `angular.z` = rotation (-) left (+) right
+
 ```bash
 turn_scale = 1.0
 ```
@@ -44,3 +47,15 @@ turn_scale = 1.0
 | Nodes | Topics |
 | --- | --- |
 | /motor_controller_node | /cmd_vel_filtered |
+
+## LiDAR
+
+Start LiDAR Node
+```bash
+ros2 launch ldlidar_sl_ros2 ld14p.launch.py
+```
+
+Launch rviz2
+```bash
+rviz2 -d src/ldlidar_sl_ros2/rviz2/ldlidar.rviz 
+```
