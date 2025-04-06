@@ -3,7 +3,7 @@
 ## Setup
 
 ```
-git clone --recursive
+git clone --recursive https://github.com/MarcusHsieh/MOLL-E.git
 ```
 ```bash
 cd run
