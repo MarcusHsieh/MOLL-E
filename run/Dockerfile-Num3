@@ -43,11 +43,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tornado \
     simplejpeg 
 
-# CSI camera dependencies
+# USB camera dependencies
 RUN apt-get update && \
-    apt-get install -y python3-opencv python3-gi python3-gst-1.0 gstreamer1.0-tools \
+    apt-get install -y python3-gst-1.0 gir1.2-gst-rtsp-server-1.0 gstreamer1.0-tools \
                        gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
-                       gstreamer1.0-plugins-ugly gstreamer1.0-libav && \
+                       gstreamer1.0-plugins-ugly gstreamer1.0-libav libgstreamer1.0-dev \
+                       libgstreamer-plugins-base1.0-dev python3-gi python3-pydot && \
+    apt-get install -y gstreamer1.0-plugins-good gstreamer1.0-v4l2 && \
     rm -rf /var/lib/apt/lists/*
 
 
