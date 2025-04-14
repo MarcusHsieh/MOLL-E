@@ -35,7 +35,7 @@ ros2 launch mpu6050driver mpu6050driver_launch.py &
 echo "IMU node launched."
 
 # Camera
-ros2 launch jetson_camera_pub camera.launch.py &
+ros2 run jetson_camera_pub camera_node &
 echo "Camera node launched."
 
 # wget https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js -O web/nipplejs.min.js

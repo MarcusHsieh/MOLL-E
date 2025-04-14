@@ -11,11 +11,10 @@ from gi.repository import Gst, GLib
 
 import sys
 import signal
-import threading # Added for mainloop thread
 
 class GstCameraNode(Node):
     def __init__(self):
-        super().__init__('gst_camera_node') # Node name used internally
+        super().__init__('gst_camera_node')
 
         # --- Parameters ---
         self.declare_parameter('camera_device', '/dev/video1')
@@ -52,22 +51,13 @@ class GstCameraNode(Node):
         self.publisher_ = self.create_publisher(CompressedImage, self.topic_name, qos_profile)
 
         # --- GStreamer Initialization ---
-        try:
-            Gst.init(sys.argv)
-        except Exception as e:
-             self.get_logger().error(f"Error initializing GStreamer: {e}")
-             rclpy.shutdown()
-             sys.exit(1)
-
+        Gst.init(sys.argv)
         self.pipeline = None
         self.appsink = None
         self.mainloop = GLib.MainLoop()
-        self.mainloop_thread = None # Initialize thread attribute
 
         # Handle Ctrl+C
-        # Use a lambda to pass 'self' to the handler if needed, or keep it simple
         signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGTERM, self.signal_handler) # Handle termination signal too
 
         # --- Build Pipeline ---
         self.build_pipeline()
@@ -89,16 +79,8 @@ class GstCameraNode(Node):
             self.pipeline = Gst.parse_launch(pipeline_str)
         except GLib.Error as e:
             self.get_logger().error(f"Failed to parse pipeline: {e}")
-            # Ensure cleanup happens even if parsing fails
-            self.cleanup()
             rclpy.shutdown()
             sys.exit(1)
-        except Exception as e: # Catch other potential parsing errors
-            self.get_logger().error(f"An unexpected error occurred during pipeline parsing: {e}")
-            self.cleanup()
-            rclpy.shutdown()
-            sys.exit(1)
-
 
         # Get the appsink element
         self.appsink = self.pipeline.get_by_name('ros_sink')
@@ -106,217 +88,104 @@ class GstCameraNode(Node):
             self.get_logger().error("Could not find appsink element 'ros_sink' in the pipeline.")
             if self.pipeline:
                 self.pipeline.set_state(Gst.State.NULL)
-            self.cleanup() # Ensure cleanup
             rclpy.shutdown()
             sys.exit(1)
 
         # Set the callback for new samples
         self.appsink.set_property('emit-signals', True)
-        # Use connect_after for potentially safer signal handling in threaded contexts
         self.appsink.connect('new-sample', self.on_new_sample)
 
     def start_pipeline(self):
         if self.pipeline:
             self.get_logger().info("Setting pipeline to PLAYING...")
             ret = self.pipeline.set_state(Gst.State.PLAYING)
-
             if ret == Gst.StateChangeReturn.FAILURE:
                 self.get_logger().error("Unable to set the pipeline to the playing state.")
-                # Attempt to get more details from the bus
-                bus = self.pipeline.get_bus()
-                if bus:
-                    msg = bus.timed_pop_filtered(
-                        Gst.SECOND * 1, # Wait up to 1 second
-                        Gst.MessageType.ERROR | Gst.MessageType.WARNING
-                    )
-                    if msg:
-                         err, debug_info = msg.parse_error()
-                         self.get_logger().error(f"GStreamer Error: {err}, Debug Info: {debug_info}")
                 self.cleanup()
-                # Use rclpy shutdown mechanism properly
-                if rclpy.ok():
-                    rclpy.shutdown()
-                sys.exit(1) # Exit after shutdown attempt
-
+                rclpy.shutdown()
+                sys.exit(1)
             elif ret == Gst.StateChangeReturn.ASYNC:
-                 self.get_logger().info("Pipeline state change is asynchronous. Waiting for ASYNC_DONE...")
-                 # Wait for the state change to complete
-                 ret, state, pending = self.pipeline.get_state(Gst.CLOCK_TIME_NONE) # Block until state change is done
-                 if ret == Gst.StateChangeReturn.FAILURE:
-                     self.get_logger().error("Pipeline failed to reach PLAYING state asynchronously.")
-                     self.cleanup()
-                     if rclpy.ok():
-                         rclpy.shutdown()
-                     sys.exit(1)
-                 elif state == Gst.State.PLAYING:
-                     self.get_logger().info("Pipeline state successfully set to PLAYING (async).")
-                 else:
-                      self.get_logger().warning(f"Pipeline ended up in state {state.value_nick} after async change.")
-
-
+                 self.get_logger().info("Pipeline state change is asynchronous.")
+                 # We might need to wait for state change completion in some cases,
+                 # but for simple pipelines, often starting the main loop is enough.
             elif ret == Gst.StateChangeReturn.NO_PREROLL:
-                 self.get_logger().warning("Pipeline is live and does not need preroll. State is PLAYING.")
+                 self.get_logger().warning("Pipeline is live and does not need preroll.")
             else:
                  self.get_logger().info("Pipeline state set to PLAYING.")
 
-            # Start the GLib main loop in a separate thread only if pipeline started successfully
-            # Check if thread already exists and is running - might happen on restarts? (unlikely with current structure)
-            if self.mainloop_thread is None or not self.mainloop_thread.is_alive():
-                self.mainloop_thread = threading.Thread(target=self.mainloop.run, daemon=True) # Use daemon thread
-                self.mainloop_thread.start()
-                self.get_logger().info("GStreamer main loop started.")
-            else:
-                self.get_logger().warning("Main loop thread already running?")
-
+            # Start the GLib main loop in a separate thread
+            import threading
+            self.mainloop_thread = threading.Thread(target=self.mainloop.run)
+            self.mainloop_thread.start()
+            self.get_logger().info("GStreamer main loop started.")
         else:
-            self.get_logger().error("Pipeline not initialized. Cannot start.")
+            self.get_logger().error("Pipeline not initialized.")
 
-    # ============================================
-    # MODIFIED on_new_sample function starts here
-    # ============================================
     def on_new_sample(self, appsink):
         """Callback function called when a new sample is available."""
-        # Use try_pull_sample instead of pull_sample
-        sample = appsink.try_pull_sample()
+        sample = appsink.pull_sample()
+        if sample:
+            try:
+                buffer = sample.get_buffer()
+                map_info = buffer.map(Gst.MapFlags.READ)
 
-        # Check if try_pull_sample succeeded
-        if sample is None:
-            # This can happen occasionally, especially if the pipeline is stopping
-            # or if there's high load. Logging as warning, potentially throttled.
-            self.get_logger().warn("try_pull_sample returned None.", throttle_duration_sec=5)
-            return Gst.FlowReturn.OK # Still signal GStreamer to continue
+                # Create CompressedImage message
+                msg = CompressedImage()
+                msg.header.stamp = self.get_clock().now().to_msg()
+                msg.header.frame_id = self.frame_id
+                msg.format = "jpeg" # Directly from the pipeline element
+                msg.data = map_info.data # Get data as bytes
 
-        try:
-            buffer = sample.get_buffer()
-            # Make sure buffer is valid before proceeding
-            if buffer is None:
-                 self.get_logger().warn("Sample contained no buffer.", throttle_duration_sec=5)
-                 # No data to process, but GStreamer flow should continue
-                 return Gst.FlowReturn.OK
+                # Publish the message
+                self.publisher_.publish(msg)
 
-            # Map the buffer for reading
-            result, map_info = buffer.map(Gst.MapFlags.READ)
+                # Release the buffer map
+                buffer.unmap(map_info)
 
-            if not result:
-                 # Handle mapping failure
-                 self.get_logger().error("Failed to map GStreamer buffer for reading.", throttle_duration_sec=5)
-                 return Gst.FlowReturn.OK # Continue flow, but flag error
-
-            # Create CompressedImage message
-            msg = CompressedImage()
-            # Use node's clock for timestamping
-            msg.header.stamp = self.get_clock().now().to_msg()
-            msg.header.frame_id = self.frame_id
-            # Assuming the pipeline guarantees JPEG format here
-            msg.format = "jpeg"
-            # Get data as bytes. map_info.data is already bytes/memoryview in Python 3.
-            msg.data = map_info.data
-
-            # Publish the message
-            self.publisher_.publish(msg)
-
-        except GLib.Error as e:
-            # Specifically catch GLib errors which might occur during mapping or buffer ops
-            self.get_logger().error(f"GLib Error processing GStreamer sample: {e}", throttle_duration_sec=5)
-        except Exception as e:
-            # Catch any other unexpected errors during processing
-            self.get_logger().error(f"Error processing GStreamer sample: {e}", throttle_duration_sec=5)
-            # Consider if a different FlowReturn might be needed for critical errors
-            # For now, continue the flow to avoid blocking GStreamer entirely
-        finally:
-            # Crucially, unmap the buffer if it was successfully mapped
-            if 'map_info' in locals() and map_info is not None:
-                 buffer.unmap(map_info)
-            # Sample itself is managed by GStreamer after pull/try_pull,
-            # no explicit 'unref' needed here typically
-
-        # Indicate success (or recoverable error) to GStreamer
-        return Gst.FlowReturn.OK
-    # ============================================
-    # MODIFIED on_new_sample function ends here
-    # ============================================
-
+            except Exception as e:
+                self.get_logger().error(f"Error processing GStreamer sample: {e}", throttle_duration_sec=5)
+            finally:
+                # The sample object itself doesn't need explicit cleanup here
+                # The buffer reference is managed within the sample.
+                 pass # Keep this structure for potential future needs
+        return Gst.FlowReturn.OK # Indicate success to GStreamer
 
     def cleanup(self):
-        self.get_logger().info("Initiating cleanup...")
-
-        # Stop the main loop first
-        if hasattr(self, 'mainloop') and self.mainloop is not None and self.mainloop.is_running():
-            self.get_logger().info("Quitting GStreamer main loop...")
+        self.get_logger().info("Cleaning up GStreamer pipeline...")
+        if hasattr(self, 'mainloop') and self.mainloop.is_running():
             self.mainloop.quit()
-
-        # Wait for the main loop thread to finish
-        if hasattr(self, 'mainloop_thread') and self.mainloop_thread is not None and self.mainloop_thread.is_alive():
-             self.get_logger().info("Joining GStreamer main loop thread...")
+        if hasattr(self, 'mainloop_thread') and self.mainloop_thread.is_alive():
              self.mainloop_thread.join(timeout=2) # Wait max 2 seconds
              if self.mainloop_thread.is_alive():
-                 self.get_logger().warning("Mainloop thread did not exit cleanly after 2 seconds.")
-             else:
-                 self.get_logger().info("Main loop thread joined.")
-        self.mainloop_thread = None # Clear thread reference
+                 self.get_logger().warning("Mainloop thread did not exit cleanly.")
 
-        # Set pipeline to NULL state
-        if hasattr(self, 'pipeline') and self.pipeline is not None:
-            self.get_logger().info("Setting GStreamer pipeline to NULL state...")
+        if self.pipeline:
             self.pipeline.set_state(Gst.State.NULL)
-            self.get_logger().info("Pipeline state set to NULL.")
-            # Clear references - helps GC but Gst should manage internal refs too
             self.pipeline = None
             self.appsink = None
-
-        # No explicit Gst.deinit() needed usually when script exits
-
-        self.get_logger().info("Cleanup complete.")
+        self.get_logger().info("GStreamer cleanup complete.")
 
     def signal_handler(self, sig, frame):
-        # This handler is called by the OS signal
-        self.get_logger().info(f'Signal {sig} received. Shutting down node.')
-        # This cleanup call will handle GStreamer shutdown
+        self.get_logger().info('Ctrl+C detected. Shutting down.')
         self.cleanup()
-        # Initiate ROS shutdown AFTER internal cleanup if possible
-        # Check if context is still valid before calling shutdown
-        if rclpy.ok():
-            rclpy.shutdown()
-        # sys.exit(0) # Often not needed if rclpy.spin() returns properly
-
+        rclpy.shutdown()
+        sys.exit(0)
 
 def main(args=None):
     rclpy.init(args=args)
-    node = None # Initialize node to None
+    node = GstCameraNode()
     try:
-        node = GstCameraNode()
         node.start_pipeline()
-        if node.pipeline and node.appsink: # Only spin if pipeline started okay
-             rclpy.spin(node)
-        else:
-             node.get_logger().error("Node initialization or pipeline start failed. Not spinning.")
+        rclpy.spin(node)
     except KeyboardInterrupt:
-        if node:
-            node.get_logger().info('KeyboardInterrupt caught, initiating shutdown.')
-        else:
-            print('KeyboardInterrupt caught during node initialization.')
+        node.get_logger().info('KeyboardInterrupt caught, shutting down.')
     except Exception as e:
-        # Log exceptions during node initialization or spin
-        if node:
-             node.get_logger().fatal(f"Unhandled exception in main spin loop: {e}", )
-             import traceback
-             node.get_logger().error(traceback.format_exc()) # Log stack trace
-        else:
-             print(f"Unhandled exception during node initialization: {e}")
-             import traceback
-             traceback.print_exc()
+        node.get_logger().error(f"Unhandled exception in main: {e}")
     finally:
-        # This cleanup runs regardless of how the try block exits
-        if node is not None:
-            node.get_logger().info("Performing final cleanup...")
-            node.cleanup() # Ensure GStreamer is stopped
-
-        # Ensure ROS is shut down if it was initialized and is still running
+        # Ensure cleanup happens even if spin exits unexpectedly
+        node.cleanup()
         if rclpy.ok():
             rclpy.shutdown()
-            print("rclpy shutdown complete.")
-        else:
-             print("rclpy already shut down or not initialized.")
 
 if __name__ == '__main__':
     main()
