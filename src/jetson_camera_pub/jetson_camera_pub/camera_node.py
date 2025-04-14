@@ -172,53 +172,77 @@ class GstCameraNode(Node):
             self.get_logger().error("Pipeline not initialized. Cannot start.")
 
     # ============================================
-    # MODIFIED on_new_sample function starts here
+    # MODIFIED on_new_sample function (using emit)
     # ============================================
     def on_new_sample(self, appsink):
         """Callback function called when a new sample is available."""
 
-        # --- TEMPORARY DEBUGGING ---
+        # --- TEMPORARY DEBUGGING (Optional - Can remove later) ---
         try:
-            self.get_logger().info("--- Appsink available methods/attributes: ---")
-            # Print all attributes/methods - this might be long!
-            methods = dir(appsink)
-            # Print a few per line for better readability
-            for i in range(0, len(methods), 5):
-                self.get_logger().info(f"{methods[i:i+5]}")
-            self.get_logger().info("--- End of Appsink methods/attributes ---")
-
-            # Check specifically if the methods we expect are present
-            has_try_pull = hasattr(appsink, 'try_pull_sample')
-            has_pull = hasattr(appsink, 'pull_sample')
-            self.get_logger().info(f"Has 'try_pull_sample'? {has_try_pull}")
-            self.get_logger().info(f"Has 'pull_sample'? {has_pull}")
-
+            # Can remove this section once it's working
+            if not hasattr(self, '_debug_printed'): # Print only once
+                 self.get_logger().info("--- Appsink available methods/attributes (Check for Emit): ---")
+                 methods = dir(appsink)
+                 for i in range(0, len(methods), 5): self.get_logger().info(f"{methods[i:i+5]}")
+                 self.get_logger().info("--- End of Appsink methods/attributes ---")
+                 self.get_logger().info(f"Has 'try_pull_sample'? {hasattr(appsink, 'try_pull_sample')}")
+                 self.get_logger().info(f"Has 'pull_sample'? {hasattr(appsink, 'pull_sample')}")
+                 self.get_logger().info(f"Has 'emit'? {hasattr(appsink, 'emit')}")
+                 self._debug_printed = True # Flag to prevent re-printing
         except Exception as e:
             self.get_logger().error(f"Error during debug printing: {e}")
         # --- END OF TEMPORARY DEBUGGING ---
 
+        sample = None # Initialize sample to None
 
-        # Use try_pull_sample instead of pull_sample
-        # This line will still likely fail if the debug print confirms it's missing
-        sample = appsink.try_pull_sample()
+        # --- Try using emit instead of direct attribute access ---
+        try:
+            # self.get_logger().debug("Attempting to emit 'try-pull-sample'...")
+            # Emit the "try-pull-sample" action signal.
+            # Argument 1: signal name (string)
+            # Argument 2: timeout in nanoseconds (Gst.ClockTime). 0 = non-blocking.
+            # The return value of emit for action signals is the return value of the action.
+            sample = appsink.emit("try-pull-sample", 0)
+            # self.get_logger().debug(f"Result of emit('try-pull-sample', 0): {type(sample)}")
 
-        # Check if try_pull_sample succeeded
-        if sample is None:
-            self.get_logger().warn("try_pull_sample returned None.", throttle_duration_sec=5)
+        except GLib.Error as emit_err:
+             # Catch potential errors if the action signal itself doesn't exist or fails
+             self.get_logger().error(f"GLib.Error emitting 'try-pull-sample': {emit_err}", throttle_duration_sec=5)
+             return Gst.FlowReturn.OK # Allow pipeline to continue
+        except TypeError as emit_type_err:
+             # Catch error if 'emit' exists but signal name is wrong or args don't match
+             self.get_logger().error(f"TypeError emitting 'try-pull-sample': {emit_type_err}. Check signal name and arguments.", throttle_duration_sec=5)
+             return Gst.FlowReturn.OK
+        except Exception as emit_exc:
+             self.get_logger().error(f"Unexpected Error emitting 'try-pull-sample': {emit_exc}", throttle_duration_sec=5)
+             return Gst.FlowReturn.OK # Allow pipeline to continue
+        # --- End of emit attempt ---
+
+
+        # Check if the emit call succeeded in returning a valid sample object
+        # Note: Gst.Sample is the expected type if successful
+        if sample is None or not isinstance(sample, Gst.Sample):
+            # This can happen if timeout occurs (with non-zero timeout) or if emit failed subtly.
+            self.get_logger().warn(f"emit('try-pull-sample', 0) returned {type(sample)} instead of Gst.Sample.", throttle_duration_sec=5)
             return Gst.FlowReturn.OK # Still signal GStreamer to continue
 
+        # --- REST OF THE FUNCTION (buffer processing, publishing) REMAINS THE SAME ---
         try:
             buffer = sample.get_buffer()
+            # Make sure buffer is valid before proceeding
             if buffer is None:
                  self.get_logger().warn("Sample contained no buffer.", throttle_duration_sec=5)
                  return Gst.FlowReturn.OK
 
+            # Map the buffer for reading
             result, map_info = buffer.map(Gst.MapFlags.READ)
 
             if not result:
                  self.get_logger().error("Failed to map GStreamer buffer for reading.", throttle_duration_sec=5)
+                 # Unmap might not be needed if map failed, but doesn't hurt to try in finally
                  return Gst.FlowReturn.OK
 
+            # Create CompressedImage message
             msg = CompressedImage()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = self.frame_id
@@ -231,18 +255,16 @@ class GstCameraNode(Node):
             self.get_logger().error(f"GLib Error processing GStreamer sample: {e}", throttle_duration_sec=5)
         except Exception as e:
             self.get_logger().error(f"Error processing GStreamer sample: {e}", throttle_duration_sec=5)
-            # Check if the error is the AttributeError again, just in case
-            if isinstance(e, AttributeError) and 'try_pull_sample' in str(e):
-                 self.get_logger().error("AttributeError confirmed even after debug print.")
-                 # Maybe stop the pipeline here or exit? For now, just log.
-
         finally:
+            # Unmap the buffer if it was successfully mapped
             if 'map_info' in locals() and map_info is not None:
                  buffer.unmap(map_info)
+            # Sample reference handling is typically managed by GStreamer/GI here
 
+        # Indicate success to GStreamer
         return Gst.FlowReturn.OK
     # ============================================
-    # MODIFIED on_new_sample function ends here
+    # End of MODIFIED on_new_sample function
     # ============================================
 
 
