@@ -43,6 +43,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tornado \
     simplejpeg 
 
+# CSI camera dependencies
+RUN apt-get update && \
+    apt-get install -y python3-opencv python3-gi python3-gst-1.0 gstreamer1.0-tools \
+                       gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
+                       gstreamer1.0-plugins-ugly gstreamer1.0-libav && \
+    rm -rf /var/lib/apt/lists/*
+
+
 # Layer 5: Build the workspace from the COPIED source
 RUN source /opt/ros/${ROS_DISTRO}/install/setup.bash && \
     colcon build --symlink-install --parallel-workers 1 
