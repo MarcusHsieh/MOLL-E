@@ -18,8 +18,10 @@ source /opt/ros/humble/install/setup.bash
 ```bash
 cd run
 ```
+> -t = image name  
+> -f = Dockerfile name  
 ```bash
-docker build -t molle-image .
+docker build -t molle-image -f Dockerfile-Num3 .
 ```
 ```bash
 ./run/jetson.sh

@@ -49,7 +49,6 @@ RUN apt-get update && \
                        gstreamer1.0-plugins-good gstreamer1.0-plugins-bad \
                        gstreamer1.0-plugins-ugly gstreamer1.0-libav libgstreamer1.0-dev \
                        libgstreamer-plugins-base1.0-dev python3-gi python3-pydot && \
-    apt-get install -y gstreamer1.0-plugins-good gstreamer1.0-v4l2 && \
     rm -rf /var/lib/apt/lists/*
 
 
