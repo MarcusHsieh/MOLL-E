@@ -176,61 +176,70 @@ class GstCameraNode(Node):
     # ============================================
     def on_new_sample(self, appsink):
         """Callback function called when a new sample is available."""
+
+        # --- TEMPORARY DEBUGGING ---
+        try:
+            self.get_logger().info("--- Appsink available methods/attributes: ---")
+            # Print all attributes/methods - this might be long!
+            methods = dir(appsink)
+            # Print a few per line for better readability
+            for i in range(0, len(methods), 5):
+                self.get_logger().info(f"{methods[i:i+5]}")
+            self.get_logger().info("--- End of Appsink methods/attributes ---")
+
+            # Check specifically if the methods we expect are present
+            has_try_pull = hasattr(appsink, 'try_pull_sample')
+            has_pull = hasattr(appsink, 'pull_sample')
+            self.get_logger().info(f"Has 'try_pull_sample'? {has_try_pull}")
+            self.get_logger().info(f"Has 'pull_sample'? {has_pull}")
+
+        except Exception as e:
+            self.get_logger().error(f"Error during debug printing: {e}")
+        # --- END OF TEMPORARY DEBUGGING ---
+
+
         # Use try_pull_sample instead of pull_sample
+        # This line will still likely fail if the debug print confirms it's missing
         sample = appsink.try_pull_sample()
 
         # Check if try_pull_sample succeeded
         if sample is None:
-            # This can happen occasionally, especially if the pipeline is stopping
-            # or if there's high load. Logging as warning, potentially throttled.
             self.get_logger().warn("try_pull_sample returned None.", throttle_duration_sec=5)
             return Gst.FlowReturn.OK # Still signal GStreamer to continue
 
         try:
             buffer = sample.get_buffer()
-            # Make sure buffer is valid before proceeding
             if buffer is None:
                  self.get_logger().warn("Sample contained no buffer.", throttle_duration_sec=5)
-                 # No data to process, but GStreamer flow should continue
                  return Gst.FlowReturn.OK
 
-            # Map the buffer for reading
             result, map_info = buffer.map(Gst.MapFlags.READ)
 
             if not result:
-                 # Handle mapping failure
                  self.get_logger().error("Failed to map GStreamer buffer for reading.", throttle_duration_sec=5)
-                 return Gst.FlowReturn.OK # Continue flow, but flag error
+                 return Gst.FlowReturn.OK
 
-            # Create CompressedImage message
             msg = CompressedImage()
-            # Use node's clock for timestamping
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.header.frame_id = self.frame_id
-            # Assuming the pipeline guarantees JPEG format here
             msg.format = "jpeg"
-            # Get data as bytes. map_info.data is already bytes/memoryview in Python 3.
             msg.data = map_info.data
 
-            # Publish the message
             self.publisher_.publish(msg)
 
         except GLib.Error as e:
-            # Specifically catch GLib errors which might occur during mapping or buffer ops
             self.get_logger().error(f"GLib Error processing GStreamer sample: {e}", throttle_duration_sec=5)
         except Exception as e:
-            # Catch any other unexpected errors during processing
             self.get_logger().error(f"Error processing GStreamer sample: {e}", throttle_duration_sec=5)
-            # Consider if a different FlowReturn might be needed for critical errors
-            # For now, continue the flow to avoid blocking GStreamer entirely
+            # Check if the error is the AttributeError again, just in case
+            if isinstance(e, AttributeError) and 'try_pull_sample' in str(e):
+                 self.get_logger().error("AttributeError confirmed even after debug print.")
+                 # Maybe stop the pipeline here or exit? For now, just log.
+
         finally:
-            # Crucially, unmap the buffer if it was successfully mapped
             if 'map_info' in locals() and map_info is not None:
                  buffer.unmap(map_info)
-            # Sample itself is managed by GStreamer after pull/try_pull,
-            # no explicit 'unref' needed here typically
 
-        # Indicate success (or recoverable error) to GStreamer
         return Gst.FlowReturn.OK
     # ============================================
     # MODIFIED on_new_sample function ends here
